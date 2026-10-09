@@ -1,0 +1,6 @@
+{
+  "name": "KeyVault - 安全API管理与加密金库",
+  "description": "安全加密存储API密钥与中转站点配置，支持自定义标签、分组管理、模型拉取、搜索筛选及数据备份导入导出。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
