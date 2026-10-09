@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ApiKeyItem, GroupItem } from '../types';
 import { maskApiKey } from '../utils/crypto';
 import { useToast } from './Toast';
-import { Copy, Check, CheckSquare, Square, Layers, RefreshCw } from 'lucide-react';
+import { Copy, Check, CheckSquare, Square, Layers, RefreshCw, Tag } from 'lucide-react';
 
 interface ApiKeyCardProps {
   item: ApiKeyItem;
@@ -33,7 +33,6 @@ export const ApiKeyCard: React.FC<ApiKeyCardProps> = ({
   const [revealedKeyIds, setRevealedKeyIds] = useState<Record<string, boolean>>({});
 
   const group = groups.find((g) => g.id === item.groupId);
-  const groupBadge = group ? group.name : item.tags?.[0] || '';
 
   // Normalize keys list
   const keysList = item.keys && item.keys.length > 0
@@ -87,7 +86,7 @@ export const ApiKeyCard: React.FC<ApiKeyCardProps> = ({
           : 'border-neutral-200/90 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700'
       }`}
     >
-      {/* Top Row: Select Checkbox (if active) + Name + Tag/Group Badge */}
+      {/* 1. Top Row: Select Checkbox (if active) + Name + Group Badge */}
       <div className="flex items-center justify-between gap-3 mb-1.5">
         <div className="flex items-center gap-2.5 min-w-0">
           {isSelectMode && (
@@ -116,24 +115,16 @@ export const ApiKeyCard: React.FC<ApiKeyCardProps> = ({
             {item.name}
           </h3>
 
-          {/* Group / Custom Tag Badge (as shown in Screenshot 1) */}
-          {groupBadge && (
-            <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs px-2 py-0.5 rounded-md font-normal shrink-0">
-              {groupBadge}
+          {/* Group Badge */}
+          {group && (
+            <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs px-2.5 py-0.5 rounded-lg font-normal shrink-0">
+              {group.name}
             </span>
           )}
-          {item.tags && item.tags.filter((t) => t !== groupBadge).map((t) => (
-            <span
-              key={t}
-              className="bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 text-xs px-2 py-0.5 rounded-md font-normal shrink-0 hidden sm:inline-block"
-            >
-              {t}
-            </span>
-          ))}
         </div>
       </div>
 
-      {/* Second Row: API Base URL with Copy Button */}
+      {/* 2. Second Row: API Base URL with Copy Button */}
       <div className="mb-3 flex items-center justify-between gap-2">
         <span
           onClick={handleCopyUrl}
@@ -145,7 +136,7 @@ export const ApiKeyCard: React.FC<ApiKeyCardProps> = ({
         <button
           type="button"
           onClick={handleCopyUrl}
-          className="inline-flex items-center gap-1 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors shrink-0"
+          className="inline-flex items-center gap-1 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors shrink-0 cursor-pointer"
           title="复制 API 地址"
           aria-label="复制 API 地址"
         >
@@ -160,7 +151,7 @@ export const ApiKeyCard: React.FC<ApiKeyCardProps> = ({
         </button>
       </div>
 
-      {/* Third Row: API Keys Badges (Screenshot 1 format) */}
+      {/* 3. Third Row: API Keys Badges */}
       <div className="flex flex-wrap items-center gap-2 mb-3">
         {keysList.map((k) => {
           const isRevealed = revealedKeyIds[k.id];
@@ -195,28 +186,67 @@ export const ApiKeyCard: React.FC<ApiKeyCardProps> = ({
         })}
       </div>
 
-      {/* Fourth Row: Description / Models summary & [查看/编辑] button */}
-      <div className="flex items-center justify-between gap-3 pt-1 border-t border-neutral-100 dark:border-neutral-800/60">
-        <div className="min-w-0 flex-1">
-          {item.models && item.models.length > 0 ? (
-            <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 truncate">
-              <Layers className="w-3.5 h-3.5 shrink-0 opacity-70" />
-              <span className="truncate">
-                已存 {item.models.length} 个模型 ({item.models.slice(0, 3).join(', ')}{item.models.length > 3 ? '...' : ''})
-              </span>
+      {/* 4. Fourth Section: Model Selection */}
+      <div className="mb-2.5">
+        {item.models && item.models.length > 0 ? (
+          <div className="flex items-center flex-wrap gap-1.5 text-xs">
+            <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-300 shrink-0 font-medium">
+              <Layers className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+              <span>已存模型 ({item.models.length}):</span>
             </div>
-          ) : item.description ? (
-            <p className="text-xs text-neutral-400 dark:text-neutral-500 truncate">
-              {item.description}
-            </p>
-          ) : (
-            <span className="text-xs text-neutral-400 dark:text-neutral-600">
-              未拉取模型
+            <div className="flex flex-wrap items-center gap-1">
+              {item.models.slice(0, 5).map((m) => (
+                <span
+                  key={m}
+                  className="font-mono text-[11px] px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/50 font-medium"
+                >
+                  {m}
+                </span>
+              ))}
+              {item.models.length > 5 && (
+                <span className="text-[11px] text-neutral-400 dark:text-neutral-500 font-mono px-1">
+                  +{item.models.length - 5} 更多
+                </span>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 text-xs text-neutral-400 dark:text-neutral-500">
+            <Layers className="w-3.5 h-3.5 opacity-50 shrink-0" />
+            <span>未选择模型</span>
+          </div>
+        )}
+      </div>
+
+      {/* 5. Fifth Section: Description - Placed below Model Selection */}
+      {item.description && (
+        <div className="mb-2.5 text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed bg-neutral-50 dark:bg-neutral-800/40 rounded-xl px-3 py-2 border border-neutral-100 dark:border-neutral-800/70 break-words">
+          <p className="line-clamp-3 whitespace-pre-wrap">{item.description}</p>
+        </div>
+      )}
+
+      {/* 6. Sixth Section: Tags - Placed below Description */}
+      {item.tags && item.tags.length > 0 && (
+        <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
+          <Tag className="w-3.5 h-3.5 text-neutral-400 dark:text-neutral-500 shrink-0" />
+          {item.tags.map((t) => (
+            <span
+              key={t}
+              className="inline-flex items-center px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs border border-neutral-200/80 dark:border-neutral-700/60 font-normal"
+            >
+              #{t}
             </span>
-          )}
+          ))}
+        </div>
+      )}
+
+      {/* 7. Bottom Actions Row */}
+      <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-neutral-100 dark:border-neutral-800/60">
+        <div className="text-[11px] text-neutral-400 dark:text-neutral-500">
+          {item.updatedAt ? `更新于 ${new Date(item.updatedAt).toLocaleDateString()}` : ''}
         </div>
 
-        {/* Action Button: [ 查看/编辑 ] matching Screenshot 1 */}
+        {/* Action Button: [ 查看/编辑 ] & [ 拉取模型 ] */}
         <div className="flex items-center gap-2 shrink-0">
           {(!item.models || item.models.length === 0) && onQuickFetchModels && (
             <button
@@ -225,7 +255,7 @@ export const ApiKeyCard: React.FC<ApiKeyCardProps> = ({
                 onQuickFetchModels(item);
               }}
               disabled={isFetchingModels}
-              className="px-2.5 py-1 text-xs rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors flex items-center gap-1 disabled:opacity-50"
+              className="px-2.5 py-1 text-xs rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors flex items-center gap-1 disabled:opacity-50 cursor-pointer"
               title="拉取模型"
             >
               <RefreshCw className={`w-3 h-3 ${isFetchingModels ? 'animate-spin' : ''}`} />
@@ -238,7 +268,7 @@ export const ApiKeyCard: React.FC<ApiKeyCardProps> = ({
               e.stopPropagation();
               onViewEdit(item);
             }}
-            className="px-3 py-1 text-xs rounded-lg border border-neutral-200 dark:border-neutral-700/80 bg-white dark:bg-[#202020] text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-2xs font-medium"
+            className="px-3 py-1 text-xs rounded-lg border border-neutral-200 dark:border-neutral-700/80 bg-white dark:bg-[#202020] text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-2xs font-medium cursor-pointer"
           >
             查看/编辑
           </button>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GroupItem } from '../types';
-import { Search, ChevronDown, ArrowUpDown, CheckSquare, Square, Trash2, Download, Plus, Settings2 } from 'lucide-react';
+import { Search, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, CheckSquare, Square, Trash2, Download, Plus, Settings2 } from 'lucide-react';
 
 interface SearchFilterBarProps {
   searchQuery: string;
@@ -12,6 +12,9 @@ interface SearchFilterBarProps {
   totalCount: number;
   sortBy: 'default' | 'name' | 'models' | 'updated';
   onSortChange: (sort: 'default' | 'name' | 'models' | 'updated') => void;
+  sortOrder: 'asc' | 'desc';
+  onSortOrderChange: (order: 'asc' | 'desc') => void;
+  onToggleSortOrder: () => void;
   isSelectMode: boolean;
   onToggleSelectMode: () => void;
   selectedCount: number;
@@ -31,6 +34,9 @@ export const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
   totalCount,
   sortBy,
   onSortChange,
+  sortOrder,
+  onSortOrderChange,
+  onToggleSortOrder,
   isSelectMode,
   onToggleSelectMode,
   selectedCount,
@@ -110,7 +116,7 @@ export const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
 
           {/* Dropdown Menu when clicking ▾ */}
           {isGroupDropdownOpen && (
-            <div className="absolute left-0 top-full mt-1.5 w-52 rounded-2xl bg-white dark:bg-[#222222] border border-neutral-200 dark:border-neutral-700 shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
+            <div className="absolute left-0 top-full mt-1.5 w-52 rounded-2xl bg-white dark:bg-[#222222] border border-neutral-200 dark:border-neutral-700 shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100 overflow-hidden">
               <div className="px-3.5 py-1 text-[11px] font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
                 选择分组
               </div>
@@ -227,43 +233,92 @@ export const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
         </div>
       </div>
 
-      {/* 3. Second Controls Row: [⇅ 默认排序 ▾] and [☑ 选择] matching Screenshot 1 */}
-      <div className="flex items-center justify-between pt-1">
-        {/* [⇅ 默认排序 ▾] */}
-        <div className="relative" ref={sortDropdownRef}>
-          <button
-            onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-neutral-200/90 dark:border-neutral-700/80 bg-white dark:bg-[#202020] text-xs text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
-          >
-            <ArrowUpDown className="w-3.5 h-3.5 opacity-60" />
-            <span>{sortLabels[sortBy]}</span>
-            <ChevronDown className="w-3 h-3 opacity-60" />
-          </button>
+      {/* 3. Second Controls Row: [⇅ 默认排序 ▾] [↑ 正序 / ↓ 倒序] and [☑ 选择] matching Screenshot 1 */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* [⇅ 默认排序 ▾] */}
+          <div className="relative shrink-0" ref={sortDropdownRef}>
+            <button
+              onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-neutral-200/90 dark:border-neutral-700/80 bg-white dark:bg-[#202020] text-xs text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer shrink-0 whitespace-nowrap"
+            >
+              <ArrowUpDown className="w-3.5 h-3.5 text-black dark:text-white shrink-0 opacity-80" />
+              <span>{sortLabels[sortBy]}</span>
+              <ChevronDown className="w-3 h-3 text-neutral-500 dark:text-neutral-400 shrink-0" />
+            </button>
 
-          {isSortDropdownOpen && (
-            <div className="absolute left-0 top-full mt-1.5 w-36 rounded-2xl bg-white dark:bg-[#222222] border border-neutral-200 dark:border-neutral-700 shadow-xl py-1 z-50 animate-in fade-in zoom-in-95 duration-100">
-              {(['default', 'updated', 'name', 'models'] as const).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => {
-                    onSortChange(s);
-                    setIsSortDropdownOpen(false);
-                  }}
-                  className={`w-full px-3 py-1.5 text-xs text-left transition-colors ${
-                    sortBy === s
-                      ? 'font-semibold text-neutral-900 dark:text-white bg-neutral-100 dark:bg-neutral-700/60'
-                      : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700/40'
-                  }`}
-                >
-                  {sortLabels[s]}
-                </button>
-              ))}
-            </div>
-          )}
+            {isSortDropdownOpen && (
+              <div className="absolute left-0 top-full mt-1.5 w-44 rounded-2xl bg-white dark:bg-[#222222] border border-neutral-200 dark:border-neutral-700 shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-100 overflow-hidden">
+                {(['default', 'updated', 'name', 'models'] as const).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => {
+                      onSortChange(s);
+                      setIsSortDropdownOpen(false);
+                    }}
+                    className={`w-full px-3 py-2 rounded-xl text-xs text-left transition-colors flex items-center justify-between cursor-pointer ${
+                      sortBy === s
+                        ? 'font-semibold text-neutral-900 dark:text-white bg-neutral-100 dark:bg-neutral-800'
+                        : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800/60'
+                    }`}
+                  >
+                    <span>{sortLabels[s]}</span>
+                    {sortBy === s && <span className="text-[11px] text-black dark:text-white font-bold ml-2">✓</span>}
+                  </button>
+                ))}
+
+                <div className="pt-1 mt-1 border-t border-neutral-100 dark:border-neutral-800">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onToggleSortOrder();
+                      setIsSortDropdownOpen(false);
+                    }}
+                    className="w-full px-3 py-2 rounded-xl text-xs text-left text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors flex items-center justify-between cursor-pointer"
+                  >
+                    <span>排序方向</span>
+                    <span className="font-medium text-neutral-900 dark:text-white flex items-center gap-1">
+                      {sortOrder === 'asc' ? (
+                        <>
+                          <ArrowUp className="w-3.5 h-3.5 text-black dark:text-white shrink-0" />
+                          <span>正序</span>
+                        </>
+                      ) : (
+                        <>
+                          <ArrowDown className="w-3.5 h-3.5 text-black dark:text-white shrink-0" />
+                          <span>倒序</span>
+                        </>
+                      )}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Dedicated Order Toggle Button: [ ↑ 正序 ] / [ ↓ 倒序 ] */}
+          <button
+            type="button"
+            onClick={onToggleSortOrder}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-neutral-200/90 dark:border-neutral-700/80 bg-white dark:bg-[#202020] text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer select-none shrink-0 whitespace-nowrap"
+            title={`当前为${sortOrder === 'asc' ? '正序' : '倒序'}，点击切换为${sortOrder === 'asc' ? '倒序' : '正序'}`}
+          >
+            {sortOrder === 'asc' ? (
+              <>
+                <ArrowUp className="w-3.5 h-3.5 text-black dark:text-white shrink-0" />
+                <span>正序</span>
+              </>
+            ) : (
+              <>
+                <ArrowDown className="w-3.5 h-3.5 text-black dark:text-white shrink-0" />
+                <span>倒序</span>
+              </>
+            )}
+          </button>
         </div>
 
         {/* [☑ 选择] Batch select button */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {isSelectMode && (
             <>
               {onSelectAll && (

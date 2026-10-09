@@ -58,6 +58,11 @@ function MainApp() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGroupId, setSelectedGroupId] = useState('all');
   const [sortBy, setSortBy] = useState<'default' | 'name' | 'models' | 'updated'>('default');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  const toggleSortOrder = useCallback(() => {
+    setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+  }, []);
 
   // Batch selection mode
   const [isSelectMode, setIsSelectMode] = useState(false);
@@ -216,7 +221,8 @@ function MainApp() {
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
-      const nextList = [newItem, ...apiKeys];
+      // 默认首先添加的在上面，其次添加的在首次添加的模块的后面
+      const nextList = [...apiKeys, newItem];
       setApiKeys(nextList);
       saveApiKeys(nextList);
       success('已添加新 API 记录');
@@ -331,33 +337,54 @@ function MainApp() {
           return false;
         }
 
-        // Search query
+        // Search query: supports name, url, description, keys, tags, models, and group
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase().trim();
+          const cleanQ = q.replace(/^#/, '');
           const matchName = item.name.toLowerCase().includes(q);
           const matchUrl = item.baseUrl.toLowerCase().includes(q);
           const matchDesc = item.description?.toLowerCase().includes(q) || false;
           const matchKeys = item.keys?.some((k) => k.key.toLowerCase().includes(q) || k.note?.toLowerCase().includes(q)) || false;
-          const matchTags = item.tags?.some((t) => t.toLowerCase().includes(q)) || false;
+          const matchTags = item.tags?.some((t) => {
+            const lt = t.toLowerCase();
+            return lt.includes(q) || (cleanQ ? lt.includes(cleanQ) : false);
+          }) || false;
           const matchModels = item.models?.some((m) => m.toLowerCase().includes(q)) || false;
-          return matchName || matchUrl || matchDesc || matchKeys || matchTags || matchModels;
+          const groupName = groups.find((g) => g.id === item.groupId)?.name?.toLowerCase() || '';
+          const matchGroup = groupName.includes(q);
+          return matchName || matchUrl || matchDesc || matchKeys || matchTags || matchModels || matchGroup;
         }
 
         return true;
       })
       .sort((a, b) => {
         if (sortBy === 'updated') {
-          return (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt);
+          const timeA = a.updatedAt || a.createdAt || 0;
+          const timeB = b.updatedAt || b.createdAt || 0;
+          return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
         }
         if (sortBy === 'name') {
-          return a.name.localeCompare(b.name, 'zh-CN');
+          const comp = a.name.localeCompare(b.name, 'zh-CN');
+          return sortOrder === 'asc' ? comp : -comp;
         }
         if (sortBy === 'models') {
-          return (b.models?.length || 0) - (a.models?.length || 0);
+          const countA = a.models?.length || 0;
+          const countB = b.models?.length || 0;
+          return sortOrder === 'desc' ? countB - countA : countA - countB;
         }
-        return 0; // default order
+        // Default sort:
+        // 正序 (asc): 首次添加的在上面，其次添加的在首次添加的后面
+        // 倒序 (desc): 最新添加的在上面
+        const timeA = a.createdAt || 0;
+        const timeB = b.createdAt || 0;
+        if (timeA !== timeB) {
+          return sortOrder === 'asc' ? timeA - timeB : timeB - timeA;
+        }
+        const idxA = apiKeys.indexOf(a);
+        const idxB = apiKeys.indexOf(b);
+        return sortOrder === 'asc' ? idxA - idxB : idxB - idxA;
       });
-  }, [apiKeys, selectedGroupId, searchQuery, sortBy]);
+  }, [apiKeys, selectedGroupId, searchQuery, sortBy, sortOrder, groups]);
 
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#121212] text-neutral-900 dark:text-neutral-100 flex flex-col font-sans transition-colors">
@@ -385,6 +412,9 @@ function MainApp() {
           totalCount={apiKeys.length}
           sortBy={sortBy}
           onSortChange={setSortBy}
+          sortOrder={sortOrder}
+          onSortOrderChange={setSortOrder}
+          onToggleSortOrder={toggleSortOrder}
           isSelectMode={isSelectMode}
           onToggleSelectMode={() => {
             setIsSelectMode(!isSelectMode);
