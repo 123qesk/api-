@@ -11,6 +11,7 @@ interface GroupManagerModalProps {
   onUpdateGroup: (id: string, name: string, description?: string) => void;
   onDeleteGroup: (id: string) => void;
   groupCounts: Record<string, number>;
+  onAddApiToGroup?: (groupId: string) => void;
 }
 
 export const GroupManagerModal: React.FC<GroupManagerModalProps> = ({
@@ -21,6 +22,7 @@ export const GroupManagerModal: React.FC<GroupManagerModalProps> = ({
   onUpdateGroup,
   onDeleteGroup,
   groupCounts,
+  onAddApiToGroup,
 }) => {
   const { success, error } = useToast();
 
@@ -195,16 +197,27 @@ export const GroupManagerModal: React.FC<GroupManagerModalProps> = ({
                           </div>
 
                           <div className="flex items-center gap-1 shrink-0">
+                            {onAddApiToGroup && (
+                              <button
+                                type="button"
+                                onClick={() => onAddApiToGroup(group.id)}
+                                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 transition-colors cursor-pointer"
+                                title={`在此分组「${group.name}」下添加 API`}
+                              >
+                                <Plus className="w-3 h-3" />
+                                <span>添加 API</span>
+                              </button>
+                            )}
                             <button
                               onClick={() => handleStartEdit(group)}
-                              className="p-1.5 text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                              className="p-1.5 text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
                               title="重命名"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => setConfirmDeleteId(group.id)}
-                              className="p-1.5 text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400 rounded hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                              className="p-1.5 text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400 rounded hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
                               title="删除分组"
                             >
                               <Trash2 className="w-3.5 h-3.5" />

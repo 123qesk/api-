@@ -50,19 +50,7 @@ export const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
   const groupDropdownRef = useRef<HTMLDivElement>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdowns on outside click
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (groupDropdownRef.current && !groupDropdownRef.current.contains(event.target as Node)) {
-        setIsGroupDropdownOpen(false);
-      }
-      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
-        setIsSortDropdownOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+
 
   const sortLabels = {
     default: '默认排序',
@@ -101,7 +89,7 @@ export const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
             type="button"
             onClick={() => setIsGroupDropdownOpen((prev) => !prev)}
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 leading-normal select-none shadow-2xs ${
-              selectedGroupId === 'all'
+              !selectedGroupId || selectedGroupId === 'all'
                 ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs ring-1 ring-neutral-900/10 dark:ring-white/20'
                 : 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 hover:bg-neutral-200/80 dark:hover:bg-neutral-700'
             }`}
@@ -116,10 +104,15 @@ export const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
 
           {/* Dropdown Menu when clicking ▾ */}
           {isGroupDropdownOpen && (
-            <div className="absolute left-0 top-full mt-1.5 w-52 rounded-2xl bg-white dark:bg-[#222222] border border-neutral-200 dark:border-neutral-700 shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100 overflow-hidden">
-              <div className="px-3.5 py-1 text-[11px] font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
-                选择分组
-              </div>
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setIsGroupDropdownOpen(false)}
+              />
+              <div className="absolute left-0 top-full mt-1.5 w-52 rounded-2xl bg-white dark:bg-[#222222] border border-neutral-200 dark:border-neutral-700 shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100 overflow-hidden">
+                <div className="px-3.5 py-1 text-[11px] font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
+                  选择分组
+                </div>
 
               <button
                 type="button"
@@ -128,7 +121,7 @@ export const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
                   setIsGroupDropdownOpen(false);
                 }}
                 className={`w-full px-3.5 py-2 text-xs text-left flex items-center justify-between transition-colors cursor-pointer ${
-                  selectedGroupId === 'all'
+                  !selectedGroupId || selectedGroupId === 'all'
                     ? 'font-bold text-neutral-900 dark:text-white bg-neutral-100 dark:bg-neutral-800'
                     : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800/60'
                 }`}
@@ -185,7 +178,8 @@ export const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
                 </>
               )}
             </div>
-          )}
+          </>
+        )}
         </div>
 
         {/* Dynamic User Groups Horizontal Scrollable Pills */}
@@ -248,51 +242,57 @@ export const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
             </button>
 
             {isSortDropdownOpen && (
-              <div className="absolute left-0 top-full mt-1.5 w-44 rounded-2xl bg-white dark:bg-[#222222] border border-neutral-200 dark:border-neutral-700 shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-100 overflow-hidden">
-                {(['default', 'updated', 'name', 'models'] as const).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => {
-                      onSortChange(s);
-                      setIsSortDropdownOpen(false);
-                    }}
-                    className={`w-full px-3 py-2 rounded-xl text-xs text-left transition-colors flex items-center justify-between cursor-pointer ${
-                      sortBy === s
-                        ? 'font-semibold text-neutral-900 dark:text-white bg-neutral-100 dark:bg-neutral-800'
-                        : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800/60'
-                    }`}
-                  >
-                    <span>{sortLabels[s]}</span>
-                    {sortBy === s && <span className="text-[11px] text-black dark:text-white font-bold ml-2">✓</span>}
-                  </button>
-                ))}
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsSortDropdownOpen(false)}
+                />
+                <div className="absolute left-0 top-full mt-1.5 w-44 rounded-2xl bg-white dark:bg-[#222222] border border-neutral-200 dark:border-neutral-700 shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-100 overflow-hidden">
+                  {(['default', 'updated', 'name', 'models'] as const).map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => {
+                        onSortChange(s);
+                        setIsSortDropdownOpen(false);
+                      }}
+                      className={`w-full px-3 py-2 rounded-xl text-xs text-left transition-colors flex items-center justify-between cursor-pointer ${
+                        sortBy === s
+                          ? 'font-semibold text-neutral-900 dark:text-white bg-neutral-100 dark:bg-neutral-800'
+                          : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800/60'
+                      }`}
+                    >
+                      <span>{sortLabels[s]}</span>
+                      {sortBy === s && <span className="text-[11px] text-black dark:text-white font-bold ml-2">✓</span>}
+                    </button>
+                  ))}
 
-                <div className="pt-1 mt-1 border-t border-neutral-100 dark:border-neutral-800">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onToggleSortOrder();
-                      setIsSortDropdownOpen(false);
-                    }}
-                    className="w-full px-3 py-2 rounded-xl text-xs text-left text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors flex items-center justify-between cursor-pointer"
-                  >
-                    <span>排序方向</span>
-                    <span className="font-medium text-neutral-900 dark:text-white flex items-center gap-1">
-                      {sortOrder === 'asc' ? (
-                        <>
-                          <ArrowUp className="w-3.5 h-3.5 text-black dark:text-white shrink-0" />
-                          <span>正序</span>
-                        </>
-                      ) : (
-                        <>
-                          <ArrowDown className="w-3.5 h-3.5 text-black dark:text-white shrink-0" />
-                          <span>倒序</span>
-                        </>
-                      )}
-                    </span>
-                  </button>
+                  <div className="pt-1 mt-1 border-t border-neutral-100 dark:border-neutral-800">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onToggleSortOrder();
+                        setIsSortDropdownOpen(false);
+                      }}
+                      className="w-full px-3 py-2 rounded-xl text-xs text-left text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors flex items-center justify-between cursor-pointer"
+                    >
+                      <span>排序方向</span>
+                      <span className="font-medium text-neutral-900 dark:text-white flex items-center gap-1">
+                        {sortOrder === 'asc' ? (
+                          <>
+                            <ArrowUp className="w-3.5 h-3.5 text-black dark:text-white shrink-0" />
+                            <span>正序</span>
+                          </>
+                        ) : (
+                          <>
+                            <ArrowDown className="w-3.5 h-3.5 text-black dark:text-white shrink-0" />
+                            <span>倒序</span>
+                          </>
+                        )}
+                      </span>
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
 

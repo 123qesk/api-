@@ -1,17 +1,21 @@
-import { ApiKeyItem, GroupItem, ExportData } from '../types';
+import { ApiKeyItem, GroupItem, ExportData, ArtistStringItem, PromptItem } from '../types';
 
 export function createExportData(
   apiKeys: ApiKeyItem[],
   groups: GroupItem[],
-  isEncrypted: boolean
+  isEncrypted: boolean,
+  artistStrings?: ArtistStringItem[],
+  prompts?: PromptItem[]
 ): ExportData {
   return {
-    version: '1.0.0',
+    version: '1.1.0',
     app: 'KeyVault',
     exportedAt: new Date().toISOString(),
     isEncrypted,
     groups,
     apiKeys,
+    artistStrings,
+    prompts,
   };
 }
 

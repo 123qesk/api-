@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ApiKeyItem, GroupItem, ExportData } from '../types';
+import { ApiKeyItem, GroupItem, ExportData, ArtistStringItem, PromptItem } from '../types';
 import { createExportData, downloadJsonFile, validateImportContent } from '../utils/exportImport';
 import { useToast } from './Toast';
 import {
@@ -23,6 +23,8 @@ interface BackupModalProps {
   isVaultInitialized: boolean;
   isVaultLocked: boolean;
   onImportSuccess: (importedData: ExportData, mode: 'merge' | 'overwrite') => void;
+  artistStrings?: ArtistStringItem[];
+  prompts?: PromptItem[];
 }
 
 export const BackupModal: React.FC<BackupModalProps> = ({
@@ -33,6 +35,8 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   isVaultInitialized,
   isVaultLocked,
   onImportSuccess,
+  artistStrings = [],
+  prompts = [],
 }) => {
   const { success, error, info } = useToast();
 
@@ -45,7 +49,13 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   const totalModelsCount = apiKeys.reduce((acc, cur) => acc + (cur.models?.length || 0), 0);
 
   const handleExportDownload = () => {
-    const data = createExportData(apiKeys, groups, isVaultInitialized && !isVaultLocked);
+    const data = createExportData(
+      apiKeys,
+      groups,
+      isVaultInitialized && !isVaultLocked,
+      artistStrings,
+      prompts
+    );
     const dateStr = new Date().toISOString().slice(0, 10);
     const filename = `keyvault-backup-${dateStr}.json`;
     downloadJsonFile(data, filename);
@@ -53,7 +63,13 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   };
 
   const handleCopyExportJson = async () => {
-    const data = createExportData(apiKeys, groups, isVaultInitialized && !isVaultLocked);
+    const data = createExportData(
+      apiKeys,
+      groups,
+      isVaultInitialized && !isVaultLocked,
+      artistStrings,
+      prompts
+    );
     try {
       await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
       setCopiedExport(true);

@@ -1,24 +1,22 @@
 import React from 'react';
-import { GroupItem, VaultSecurityConfig } from '../types';
+import { VaultSecurityConfig } from '../types';
 import {
   X,
-  Folder,
-  Settings2,
+  KeyRound,
+  Palette,
   Database,
   ShieldCheck,
   ShieldAlert,
-  Plus,
 } from 'lucide-react';
 
 interface MenuDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  groups: GroupItem[];
-  selectedGroupId: string;
-  onSelectGroup: (groupId: string) => void;
-  groupCounts: Record<string, number>;
-  totalCount: number;
-  onOpenGroupManager: () => void;
+  activeView: 'api-keys' | 'image-gen';
+  onSelectView: (view: 'api-keys' | 'image-gen') => void;
+  apiKeyCount: number;
+  artistStringsCount: number;
+  promptsCount: number;
   onOpenBackup: () => void;
   onOpenVault: () => void;
   vaultConfig: VaultSecurityConfig;
@@ -27,12 +25,11 @@ interface MenuDrawerProps {
 export const MenuDrawer: React.FC<MenuDrawerProps> = ({
   isOpen,
   onClose,
-  groups,
-  selectedGroupId,
-  onSelectGroup,
-  groupCounts,
-  totalCount,
-  onOpenGroupManager,
+  activeView,
+  onSelectView,
+  apiKeyCount,
+  artistStringsCount,
+  promptsCount,
   onOpenBackup,
   onOpenVault,
   vaultConfig,
@@ -51,126 +48,102 @@ export const MenuDrawer: React.FC<MenuDrawerProps> = ({
       <div className="relative w-72 max-w-[80vw] bg-white dark:bg-[#181818] border-r border-neutral-200 dark:border-neutral-800 h-full flex flex-col z-10 shadow-2xl animate-in slide-in-from-left duration-200">
         {/* Drawer Header */}
         <div className="p-5 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center font-mono font-bold text-xs">
-              API
-            </span>
-            <span className="font-bold text-neutral-900 dark:text-neutral-100">
-              API 存储管理
-            </span>
-          </div>
+          <h2 className="font-bold text-base text-neutral-900 dark:text-neutral-100 select-none tracking-tight">
+            工具箱导航
+          </h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
+            className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            aria-label="关闭侧边栏"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Groups List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Feature Modules Navigation List */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-5">
           <div>
-            <div className="flex items-center justify-between px-2 mb-2">
-              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
-                全部分组 ({groups.length})
-              </span>
-              <button
-                onClick={() => {
-                  onOpenGroupManager();
-                  onClose();
-                }}
-                className="p-1 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
-                title="管理分组"
-              >
-                <Settings2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider block px-2 mb-2">
+              功能模块
+            </span>
 
-            <div className="space-y-1">
+            <div className="space-y-1.5">
+              {/* 1. API 储存 */}
               <button
+                type="button"
                 onClick={() => {
-                  onSelectGroup('all');
+                  onSelectView('api-keys');
                   onClose();
                 }}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
-                  selectedGroupId === 'all'
-                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-left cursor-pointer ${
+                  activeView === 'api-keys'
+                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
                     : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <Folder className="w-3.5 h-3.5 opacity-70" />
-                  <span>全部 API</span>
+                <div className="flex items-center gap-2.5 truncate">
+                  <KeyRound className="w-4 h-4 shrink-0 opacity-80" />
+                  <span className="truncate">API储存</span>
                 </div>
-                <span className="font-mono tabular-nums opacity-60">({totalCount})</span>
+                <span className="font-mono tabular-nums opacity-60 text-[11px]">
+                  ({apiKeyCount})
+                </span>
               </button>
 
-              {groups.map((g) => {
-                const isSelected = selectedGroupId === g.id;
-                const count = groupCounts[g.id] || 0;
-                return (
-                  <button
-                    key={g.id}
-                    onClick={() => {
-                      onSelectGroup(g.id);
-                      onClose();
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
-                      isSelected
-                        ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
-                        : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 truncate">
-                      <Folder className="w-3.5 h-3.5 opacity-70 shrink-0" />
-                      <span className="truncate">{g.name}</span>
-                    </div>
-                    <span className="font-mono tabular-nums opacity-60 shrink-0">({count})</span>
-                  </button>
-                );
-              })}
-
+              {/* 2. 生图 (严格按要求：左侧栏只有“生图”两个字！！！无彩色、图标与主题一致) */}
               <button
+                type="button"
                 onClick={() => {
-                  onOpenGroupManager();
+                  onSelectView('image-gen');
                   onClose();
                 }}
-                className="w-full mt-2 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 border border-dashed border-neutral-300 dark:border-neutral-700"
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-left cursor-pointer ${
+                  activeView === 'image-gen'
+                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
+                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                }`}
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>管理与新建分组</span>
+                <div className="flex items-center gap-2.5 truncate">
+                  <Palette className="w-4 h-4 shrink-0 opacity-80" />
+                  <span className="truncate">生图</span>
+                </div>
+                <span className="font-mono tabular-nums opacity-60 text-[11px]">
+                  ({artistStringsCount + promptsCount})
+                </span>
               </button>
             </div>
           </div>
 
-          {/* Quick Tools */}
+          {/* Tools & Security */}
           <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800 space-y-1">
-            <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider block px-2 mb-2">
+            <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider block px-2 mb-2">
               工具与安全
             </span>
 
             <button
+              type="button"
               onClick={() => {
                 onOpenBackup();
                 onClose();
               }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
             >
               <Database className="w-4 h-4 text-neutral-500" />
               <span>数据备份与恢复</span>
             </button>
 
             <button
+              type="button"
               onClick={() => {
                 onOpenVault();
                 onClose();
               }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
             >
               {vaultConfig.isVaultInitialized && vaultConfig.isVaultLocked ? (
-                <ShieldAlert className="w-4 h-4 text-amber-500" />
+                <ShieldAlert className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
               ) : (
-                <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                <ShieldCheck className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
               )}
               <span>
                 {!vaultConfig.isVaultInitialized

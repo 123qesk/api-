@@ -39,6 +39,43 @@ export interface VaultSecurityConfig {
   lastUnlockedAt?: number;
 }
 
+export interface ArtistStringItem {
+  id: string;
+  name: string; // 名称
+  author?: string; // 作者
+  source?: string; // 来源
+  category: string; // 分类
+  images: string[]; // 画师串预览（可多选图）
+  positivePrompt: string; // 正面提示词
+  negativePrompt: string; // 负面提示词
+  createdAt: number;
+  updatedAt: number;
+  // 兼容旧字段
+  artistString?: string;
+  style?: string;
+  tags?: string[];
+  description?: string;
+  weight?: string;
+}
+
+export interface PromptItem {
+  id: string;
+  name: string; // 名称
+  author?: string; // 作者
+  category: string; // 分类
+  images: string[]; // 提示词预览（可多选图）
+  positivePrompt: string; // 正面提示词
+  negativePrompt: string; // 负面提示词
+  createdAt: number;
+  updatedAt: number;
+  // 兼容旧字段
+  title?: string;
+  style?: string;
+  tags?: string[];
+  description?: string;
+  parameters?: any;
+}
+
 export interface ExportData {
   version: string;
   exportedAt: string;
@@ -46,4 +83,6 @@ export interface ExportData {
   isEncrypted: boolean;
   groups: GroupItem[];
   apiKeys: ApiKeyItem[];
+  artistStrings?: ArtistStringItem[];
+  prompts?: PromptItem[];
 }

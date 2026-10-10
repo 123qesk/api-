@@ -15,6 +15,7 @@ import {
   Search,
   CheckSquare,
   Square,
+  Tag,
 } from 'lucide-react';
 
 interface ApiKeyDetailModalProps {
@@ -24,6 +25,7 @@ interface ApiKeyDetailModalProps {
   onDelete?: (id: string) => void;
   initialItem?: ApiKeyItem | null;
   groups: GroupItem[];
+  defaultGroupId?: string | null;
   onOpenGroupManager?: () => void;
 }
 
@@ -34,6 +36,7 @@ export const ApiKeyDetailModal: React.FC<ApiKeyDetailModalProps> = ({
   onDelete,
   initialItem,
   groups,
+  defaultGroupId,
   onOpenGroupManager,
 }) => {
   const { success, error, info } = useToast();
@@ -60,6 +63,7 @@ export const ApiKeyDetailModal: React.FC<ApiKeyDetailModalProps> = ({
   const [copiedUrl, setCopiedUrl] = useState(false);
 
   useEffect(() => {
+    if (!isOpen) return;
     if (initialItem) {
       setName(initialItem.name || '');
       setBaseUrl(initialItem.baseUrl || '');
@@ -78,7 +82,12 @@ export const ApiKeyDetailModal: React.FC<ApiKeyDetailModalProps> = ({
       setName('');
       setBaseUrl('');
       setKeys([{ id: 'k-1', key: '', note: '' }]);
-      setGroupId(groups[0]?.id || '');
+      // 自动跟随建立的分组（优先使用传入的预设建立分组或当前筛选的分组）
+      const effectiveGroup =
+        defaultGroupId && defaultGroupId !== 'all' && groups.some((g) => g.id === defaultGroupId)
+          ? defaultGroupId
+          : (groups[0]?.id || '');
+      setGroupId(effectiveGroup);
       setTags([]);
       setModels([]);
       setDescription('');
@@ -87,7 +96,7 @@ export const ApiKeyDetailModal: React.FC<ApiKeyDetailModalProps> = ({
     setModelSearchKeyword('');
     setVisibleKeyIds({});
     setCopiedUrl(false);
-  }, [initialItem, isOpen, groups]);
+  }, [initialItem, isOpen, groups, defaultGroupId]);
 
   // Filtered pulled models based on search keyword (Hook called unconditionally at top level)
   const filteredPulledModels = useMemo(() => {
@@ -426,10 +435,10 @@ export const ApiKeyDetailModal: React.FC<ApiKeyDetailModalProps> = ({
             {/* Header with 拉取模型 button */}
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-neutral-500" />
+                <Layers className="w-3.5 h-3.5 text-neutral-900 dark:text-white shrink-0" />
                 <span>模型配置</span>
                 {models.length > 0 && (
-                  <span className="text-[11px] font-mono text-neutral-500">
+                  <span className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400">
                     (已选 {models.length})
                   </span>
                 )}
@@ -440,7 +449,7 @@ export const ApiKeyDetailModal: React.FC<ApiKeyDetailModalProps> = ({
                 type="button"
                 onClick={handlePullModels}
                 disabled={isPullingModels}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-2xs"
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-2xs cursor-pointer"
               >
                 <RefreshCw className={`w-3 h-3 ${isPullingModels ? 'animate-spin' : ''}`} />
                 <span>{isPullingModels ? '正在拉取...' : '拉取模型'}</span>
@@ -450,12 +459,12 @@ export const ApiKeyDetailModal: React.FC<ApiKeyDetailModalProps> = ({
             {/* 已保存的模型标签预览 */}
             {models.length > 0 && (
               <div>
-                <div className="flex items-center justify-between text-[11px] text-neutral-500 mb-1">
+                <div className="flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400 mb-1">
                   <span>已保存的模型 ({models.length})：</span>
                   <button
                     type="button"
                     onClick={() => setModels([])}
-                    className="text-rose-500 hover:underline"
+                    className="text-rose-500 hover:underline cursor-pointer"
                   >
                     全部清空
                   </button>
@@ -464,13 +473,13 @@ export const ApiKeyDetailModal: React.FC<ApiKeyDetailModalProps> = ({
                   {models.map((m) => (
                     <span
                       key={m}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200"
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white border border-neutral-200/90 dark:border-neutral-700 font-medium transition-colors"
                     >
                       <span>{m}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveModel(m)}
-                        className="hover:text-rose-500 p-0.5"
+                        className="text-neutral-400 hover:text-rose-500 dark:text-neutral-400 dark:hover:text-rose-400 p-0.5 cursor-pointer"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -644,20 +653,21 @@ export const ApiKeyDetailModal: React.FC<ApiKeyDetailModalProps> = ({
 
           {/* 7. 自定义标签 */}
           <div>
-            <label className="block text-xs font-semibold text-neutral-800 dark:text-neutral-200 mb-1.5">
-              标签 (选填)
+            <label className="block text-xs font-semibold text-neutral-800 dark:text-neutral-200 mb-1.5 flex items-center gap-1.5">
+              <Tag className="w-3.5 h-3.5 text-neutral-900 dark:text-white shrink-0" />
+              <span>标签 (选填)</span>
             </label>
             <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#262626]">
               {tags.map((t) => (
                 <span
                   key={t}
-                  className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
+                  className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-neutral-200/80 dark:border-neutral-700/60 font-normal transition-colors"
                 >
                   <span>{t}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveTag(t)}
-                    className="hover:text-rose-500"
+                    className="hover:text-rose-500 cursor-pointer"
                   >
                     <X className="w-3 h-3" />
                   </button>

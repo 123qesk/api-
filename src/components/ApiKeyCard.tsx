@@ -190,21 +190,18 @@ export const ApiKeyCard: React.FC<ApiKeyCardProps> = ({
       <div className="mb-2.5">
         {item.models && item.models.length > 0 ? (
           <div className="flex items-center flex-wrap gap-1.5 text-xs">
-            <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-300 shrink-0 font-medium">
-              <Layers className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-              <span>已存模型 ({item.models.length}):</span>
-            </div>
+            <Layers className="w-3.5 h-3.5 text-neutral-900 dark:text-white shrink-0" />
             <div className="flex flex-wrap items-center gap-1">
               {item.models.slice(0, 5).map((m) => (
                 <span
                   key={m}
-                  className="font-mono text-[11px] px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/50 font-medium"
+                  className="font-mono text-[11px] px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white border border-neutral-200/90 dark:border-neutral-700 font-medium transition-colors"
                 >
                   {m}
                 </span>
               ))}
               {item.models.length > 5 && (
-                <span className="text-[11px] text-neutral-400 dark:text-neutral-500 font-mono px-1">
+                <span className="text-[11px] text-neutral-500 dark:text-neutral-400 font-mono px-1">
                   +{item.models.length - 5} 更多
                 </span>
               )}
@@ -228,11 +225,11 @@ export const ApiKeyCard: React.FC<ApiKeyCardProps> = ({
       {/* 6. Sixth Section: Tags - Placed below Description */}
       {item.tags && item.tags.length > 0 && (
         <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
-          <Tag className="w-3.5 h-3.5 text-neutral-400 dark:text-neutral-500 shrink-0" />
+          <Tag className="w-3.5 h-3.5 text-neutral-900 dark:text-white shrink-0" />
           {item.tags.map((t) => (
             <span
               key={t}
-              className="inline-flex items-center px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs border border-neutral-200/80 dark:border-neutral-700/60 font-normal"
+              className="inline-flex items-center px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 text-xs border border-neutral-200/80 dark:border-neutral-700/60 font-normal transition-colors"
             >
               #{t}
             </span>
