@@ -38,6 +38,7 @@ interface ImageGenStudioProps {
   selectedCategory?: string;
   onSelectCategory?: (cat: string) => void;
   onOpenGroupManagerModal?: () => void;
+  onReorderCategories?: (cats: string[]) => void;
 }
 
 export const ImageGenStudio: React.FC<ImageGenStudioProps> = ({
@@ -53,6 +54,7 @@ export const ImageGenStudio: React.FC<ImageGenStudioProps> = ({
   selectedCategory: externalSelectedCategory,
   onSelectCategory: externalOnSelectCategory,
   onOpenGroupManagerModal,
+  onReorderCategories: externalOnReorderCategories,
 }) => {
   const { success, error } = useToast();
 
@@ -183,6 +185,14 @@ export const ImageGenStudio: React.FC<ImageGenStudioProps> = ({
 
     if (selectedCategory === catName) {
       setSelectedCategory('all');
+    }
+  };
+
+  const handleReorderCategory = (newCats: string[]) => {
+    setCategories(newCats);
+    saveImageGenCategories(newCats);
+    if (externalOnReorderCategories) {
+      externalOnReorderCategories(newCats);
     }
   };
 
@@ -710,41 +720,60 @@ export const ImageGenStudio: React.FC<ImageGenStudioProps> = ({
                     {/* 卡片信息主体 */}
                     <div className="flex-1 min-w-0 flex flex-col justify-between gap-3">
                       <div>
-                        {/* 标题栏与操作按钮 */}
+                        {/* 标题栏与操作按钮 (Requirement 1: 作者在名称下面，来源在作者下面) */}
                         <div className="flex items-start justify-between gap-3 mb-1.5">
-                          <div className="flex items-center gap-2.5 flex-wrap min-w-0">
-                            <h3
-                              onClick={() => {
-                                setEditingArtist(artist);
-                                setIsArtistModalOpen(true);
-                              }}
-                              className="text-base font-bold text-neutral-900 dark:text-neutral-100 truncate cursor-pointer hover:underline"
-                              title={artist.name}
-                            >
-                              {artist.name}
-                            </h3>
+                          <div className="min-w-0 space-y-1">
+                            {/* 1. 名称与分类 */}
+                            <div className="flex items-center gap-2 flex-wrap min-w-0">
+                              <h3
+                                onClick={() => {
+                                  setEditingArtist(artist);
+                                  setIsArtistModalOpen(true);
+                                }}
+                                className="text-base font-bold text-neutral-900 dark:text-neutral-100 truncate cursor-pointer hover:underline"
+                                title={artist.name}
+                              >
+                                {artist.name}
+                              </h3>
 
-                            {artist.category && (
-                              <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs px-2.5 py-0.5 rounded-lg font-normal shrink-0">
-                                {artist.category}
-                              </span>
-                            )}
+                              {artist.category && (
+                                <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs px-2.5 py-0.5 rounded-lg font-normal shrink-0">
+                                  {artist.category}
+                                </span>
+                              )}
+                            </div>
 
+                            {/* 2. 作者 (放在名称下面) */}
                             {artist.author && (
-                              <span className="text-xs text-neutral-400 dark:text-neutral-500 truncate max-w-[140px]">
-                                作者: {artist.author}
-                              </span>
+                              <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1 truncate">
+                                <span className="font-medium text-neutral-600 dark:text-neutral-300">作者:</span>
+                                <span className="truncate">{artist.author}</span>
+                              </div>
                             )}
 
+                            {/* 3. 来源 (放在作者下面) */}
                             {artist.source && (
-                              <span className="text-xs text-neutral-400 dark:text-neutral-500 truncate max-w-[140px]">
-                                来源: {artist.source}
-                              </span>
+                              <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1 truncate">
+                                <span className="font-medium text-neutral-600 dark:text-neutral-300">来源:</span>
+                                {artist.source.startsWith('http://') || artist.source.startsWith('https://') ? (
+                                  <a
+                                    href={artist.source}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="truncate hover:underline text-blue-600 dark:text-blue-400"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {artist.source}
+                                  </a>
+                                ) : (
+                                  <span className="truncate">{artist.source}</span>
+                                )}
+                              </div>
                             )}
                           </div>
 
                           {/* 右侧操作按钮 */}
-                          <div className="flex items-center gap-1 shrink-0">
+                          <div className="flex items-center gap-1 shrink-0 pt-0.5">
                             <button
                               type="button"
                               onClick={() => handleCopyBothPrompts(artist.positivePrompt, artist.negativePrompt, artist.id)}
@@ -926,30 +955,55 @@ export const ImageGenStudio: React.FC<ImageGenStudioProps> = ({
                     {/* 卡片信息主体 */}
                     <div className="flex-1 min-w-0 flex flex-col justify-between gap-3">
                       <div>
-                        {/* 标题栏与操作按钮 */}
+                        {/* 标题栏与操作按钮 (Requirement 1: 作者在名称下面，来源在作者下面) */}
                         <div className="flex items-start justify-between gap-3 mb-1.5">
-                          <div className="flex items-center gap-2.5 flex-wrap min-w-0">
-                            <h3
-                              onClick={() => {
-                                setEditingPrompt(prompt);
-                                setIsPromptModalOpen(true);
-                              }}
-                              className="text-base font-bold text-neutral-900 dark:text-neutral-100 truncate cursor-pointer hover:underline"
-                              title={prompt.name}
-                            >
-                              {prompt.name}
-                            </h3>
+                          <div className="min-w-0 space-y-1">
+                            {/* 1. 名称与分类 */}
+                            <div className="flex items-center gap-2 flex-wrap min-w-0">
+                              <h3
+                                onClick={() => {
+                                  setEditingPrompt(prompt);
+                                  setIsPromptModalOpen(true);
+                                }}
+                                className="text-base font-bold text-neutral-900 dark:text-neutral-100 truncate cursor-pointer hover:underline"
+                                title={prompt.name}
+                              >
+                                {prompt.name}
+                              </h3>
 
-                            {prompt.category && (
-                              <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs px-2.5 py-0.5 rounded-lg font-normal shrink-0">
-                                {prompt.category}
-                              </span>
+                              {prompt.category && (
+                                <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs px-2.5 py-0.5 rounded-lg font-normal shrink-0">
+                                  {prompt.category}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* 2. 作者 (放在名称下面) */}
+                            {prompt.author && (
+                              <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1 truncate">
+                                <span className="font-medium text-neutral-600 dark:text-neutral-300">作者:</span>
+                                <span className="truncate">{prompt.author}</span>
+                              </div>
                             )}
 
-                            {prompt.author && (
-                              <span className="text-xs text-neutral-400 dark:text-neutral-500 truncate max-w-[140px]">
-                                作者: {prompt.author}
-                              </span>
+                            {/* 3. 来源 (放在作者下面) */}
+                            {prompt.source && (
+                              <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1 truncate">
+                                <span className="font-medium text-neutral-600 dark:text-neutral-300">来源:</span>
+                                {prompt.source.startsWith('http://') || prompt.source.startsWith('https://') ? (
+                                  <a
+                                    href={prompt.source}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="truncate hover:underline text-blue-600 dark:text-blue-400"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {prompt.source}
+                                  </a>
+                                ) : (
+                                  <span className="truncate">{prompt.source}</span>
+                                )}
+                              </div>
                             )}
                           </div>
 
@@ -1091,6 +1145,7 @@ export const ImageGenStudio: React.FC<ImageGenStudioProps> = ({
         onAddCategory={handleAddCategory}
         onRenameCategory={handleRenameCategory}
         onDeleteCategory={handleDeleteCategory}
+        onReorderCategories={handleReorderCategory}
         categoryCounts={categoryCounts}
       />
 

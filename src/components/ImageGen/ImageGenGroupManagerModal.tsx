@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useToast } from '../Toast';
-import { Folder, Plus, Trash2, Edit2, Check, X } from 'lucide-react';
+import { Folder, Plus, Trash2, Edit2, Check, X, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface ImageGenGroupManagerModalProps {
   isOpen: boolean;
@@ -9,6 +9,7 @@ interface ImageGenGroupManagerModalProps {
   onAddCategory: (name: string) => void;
   onRenameCategory: (oldName: string, newName: string) => void;
   onDeleteCategory: (name: string) => void;
+  onReorderCategories?: (categories: string[]) => void;
   categoryCounts: Record<string, number>;
 }
 
@@ -19,6 +20,7 @@ export const ImageGenGroupManagerModal: React.FC<ImageGenGroupManagerModalProps>
   onAddCategory,
   onRenameCategory,
   onDeleteCategory,
+  onReorderCategories,
   categoryCounts,
 }) => {
   const { success, error } = useToast();
@@ -27,6 +29,22 @@ export const ImageGenGroupManagerModal: React.FC<ImageGenGroupManagerModalProps>
   const [editingName, setEditingName] = useState<string | null>(null);
   const [editInputName, setEditInputName] = useState('');
   const [confirmDeleteName, setConfirmDeleteName] = useState<string | null>(null);
+
+  const handleMoveUp = (index: number) => {
+    if (index <= 0 || !onReorderCategories) return;
+    const next = [...categories];
+    const [moved] = next.splice(index, 1);
+    next.splice(index - 1, 0, moved);
+    onReorderCategories(next);
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (index >= categories.length - 1 || !onReorderCategories) return;
+    const next = [...categories];
+    const [moved] = next.splice(index, 1);
+    next.splice(index + 1, 0, moved);
+    onReorderCategories(next);
+  };
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,12 +148,12 @@ export const ImageGenGroupManagerModal: React.FC<ImageGenGroupManagerModalProps>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-semibold text-neutral-500 dark:text-neutral-400 px-1">
               <span>已建分组 ({categories.length})</span>
-              <span>项数</span>
+              <span className="text-[11px] font-normal text-neutral-400">可调整顺序</span>
             </div>
 
             <div className="max-h-60 overflow-y-auto space-y-1.5 pr-1">
               {categories.length > 0 ? (
-                categories.map((cat) => {
+                categories.map((cat, index) => {
                   const isEditing = editingName === cat;
                   const count = categoryCounts[cat] || 0;
                   const isDeleting = confirmDeleteName === cat;
@@ -195,6 +213,30 @@ export const ImageGenGroupManagerModal: React.FC<ImageGenGroupManagerModalProps>
                         </div>
                       ) : (
                         <>
+                          {/* Reorder Buttons */}
+                          {onReorderCategories && (
+                            <div className="flex items-center gap-0.5 shrink-0 bg-neutral-100 dark:bg-neutral-800/80 rounded-lg p-0.5 border border-neutral-200/60 dark:border-neutral-700/60">
+                              <button
+                                type="button"
+                                disabled={index === 0}
+                                onClick={() => handleMoveUp(index)}
+                                className="p-1 rounded-md text-neutral-500 hover:text-neutral-900 dark:hover:text-white disabled:opacity-25 disabled:hover:text-neutral-400 hover:bg-white dark:hover:bg-neutral-700 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                                title="上移分组"
+                              >
+                                <ArrowUp className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={index === categories.length - 1}
+                                onClick={() => handleMoveDown(index)}
+                                className="p-1 rounded-md text-neutral-500 hover:text-neutral-900 dark:hover:text-white disabled:opacity-25 disabled:hover:text-neutral-400 hover:bg-white dark:hover:bg-neutral-700 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                                title="下移分组"
+                              >
+                                <ArrowDown className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
+
                           <div className="flex items-center gap-2 min-w-0 flex-1">
                             <Folder className="w-4 h-4 text-neutral-400 shrink-0" />
                             <span className="text-xs sm:text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">

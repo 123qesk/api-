@@ -147,6 +147,11 @@ function MainApp() {
     }
   };
 
+  const handleReorderImageGenCategories = (newCats: string[]) => {
+    setImageGenCategories(newCats);
+    saveImageGenCategories(newCats);
+  };
+
   // Helper to open Add API modal with group auto-following
   const handleOpenAddModal = (presetGroupId?: string | null) => {
     setEditingItem(null);
@@ -386,6 +391,7 @@ function MainApp() {
               ...p,
               name: data.name !== undefined ? data.name : p.name,
               author: data.author !== undefined ? data.author : p.author,
+              source: data.source !== undefined ? data.source : p.source,
               category: data.category !== undefined ? data.category : p.category,
               images: data.images !== undefined ? data.images : p.images,
               positivePrompt: data.positivePrompt !== undefined ? data.positivePrompt : p.positivePrompt,
@@ -402,6 +408,7 @@ function MainApp() {
         id: 'pmt-' + Math.random().toString(36).substring(2, 9),
         name: data.name || '未命名提示词',
         author: data.author || '',
+        source: data.source || '',
         category: data.category || '默认',
         images: data.images || [],
         positivePrompt: data.positivePrompt || '',
@@ -501,6 +508,11 @@ function MainApp() {
     if (selectedGroupId === id) setSelectedGroupId('all');
   };
 
+  const handleReorderGroups = (newGroups: GroupItem[]) => {
+    setGroups(newGroups);
+    saveGroups(newGroups);
+  };
+
   // Group counts calculation
   const groupCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -509,6 +521,25 @@ function MainApp() {
     });
     return counts;
   }, [apiKeys]);
+
+  // Image Gen Group counts calculation
+  const imageGenCategoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    imageGenCategories.forEach((cat) => {
+      counts[cat] = 0;
+    });
+    artistStrings.forEach((item) => {
+      if (item.category && counts[item.category] !== undefined) {
+        counts[item.category]++;
+      }
+    });
+    prompts.forEach((item) => {
+      if (item.category && counts[item.category] !== undefined) {
+        counts[item.category]++;
+      }
+    });
+    return counts;
+  }, [imageGenCategories, artistStrings, prompts]);
 
   // Filtered & Sorted items
   const filteredItems = useMemo(() => {
@@ -604,6 +635,7 @@ function MainApp() {
             selectedCategory={selectedImageGenCategory}
             onSelectCategory={setSelectedImageGenCategory}
             onOpenGroupManagerModal={() => setIsImageGenGroupManagerOpen(true)}
+            onReorderCategories={handleReorderImageGenCategories}
           />
         ) : (
           <>
@@ -724,6 +756,7 @@ function MainApp() {
         onAddGroup={handleAddGroup}
         onUpdateGroup={handleUpdateGroup}
         onDeleteGroup={handleDeleteGroup}
+        onReorderGroups={handleReorderGroups}
         groupCounts={groupCounts}
         onAddApiToGroup={(targetGroupId) => {
           setIsGroupManagerOpen(false);
@@ -771,7 +804,8 @@ function MainApp() {
         onAddCategory={handleAddImageGenCategory}
         onRenameCategory={handleRenameImageGenCategory}
         onDeleteCategory={handleDeleteImageGenCategory}
-        categoryCounts={{}}
+        onReorderCategories={handleReorderImageGenCategories}
+        categoryCounts={imageGenCategoryCounts}
       />
 
       {/* Security Vault Modal */}

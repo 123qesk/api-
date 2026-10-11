@@ -79,6 +79,7 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({
 
   const [name, setName] = useState('');
   const [author, setAuthor] = useState('');
+  const [source, setSource] = useState('');
   const [category, setCategory] = useState('');
   const [positivePrompt, setPositivePrompt] = useState('');
   const [negativePrompt, setNegativePrompt] = useState('');
@@ -97,6 +98,7 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({
     if (initialItem) {
       setName(initialItem.name || '');
       setAuthor(initialItem.author || '');
+      setSource(initialItem.source || '');
       setCategory(initialItem.category || '');
       setPositivePrompt(initialItem.positivePrompt || '');
       setNegativePrompt(initialItem.negativePrompt || '');
@@ -104,6 +106,7 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({
     } else {
       setName('');
       setAuthor('');
+      setSource('');
       setCategory(defaultCategory || '');
       setPositivePrompt('');
       setNegativePrompt('');
@@ -180,6 +183,7 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({
       id: initialItem?.id,
       name: name.trim(),
       author: author.trim(),
+      source: source.trim(),
       category: category.trim(),
       images,
       positivePrompt: positivePrompt.trim(),
@@ -334,8 +338,8 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({
             )}
           </div>
 
-          {/* 2. 基本信息网格: 名称, 作者, 分类 */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* 2. 基本信息网格: 名称, 作者, 来源, 分类 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* 名称 */}
             <div>
               <label className="block font-semibold text-neutral-800 dark:text-neutral-200 mb-1.5">
@@ -361,6 +365,20 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
                 placeholder="输入作者..."
+                className="w-full px-3.5 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#202020] text-neutral-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-neutral-400 dark:focus:ring-neutral-600"
+              />
+            </div>
+
+            {/* 来源 */}
+            <div>
+              <label className="block font-semibold text-neutral-800 dark:text-neutral-200 mb-1.5">
+                来源
+              </label>
+              <input
+                type="text"
+                value={source}
+                onChange={(e) => setSource(e.target.value)}
+                placeholder="输入来源 (链接或出处)..."
                 className="w-full px-3.5 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#202020] text-neutral-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-neutral-400 dark:focus:ring-neutral-600"
               />
             </div>

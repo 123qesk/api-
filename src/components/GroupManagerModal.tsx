@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { GroupItem } from '../types';
 import { useToast } from './Toast';
-import { Folder, Plus, Trash2, Edit2, Check, X, AlertCircle } from 'lucide-react';
+import { Folder, Plus, Trash2, Edit2, Check, X, AlertCircle, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface GroupManagerModalProps {
   isOpen: boolean;
@@ -10,6 +10,7 @@ interface GroupManagerModalProps {
   onAddGroup: (name: string, description?: string) => void;
   onUpdateGroup: (id: string, name: string, description?: string) => void;
   onDeleteGroup: (id: string) => void;
+  onReorderGroups?: (newGroups: GroupItem[]) => void;
   groupCounts: Record<string, number>;
   onAddApiToGroup?: (groupId: string) => void;
 }
@@ -21,6 +22,7 @@ export const GroupManagerModal: React.FC<GroupManagerModalProps> = ({
   onAddGroup,
   onUpdateGroup,
   onDeleteGroup,
+  onReorderGroups,
   groupCounts,
   onAddApiToGroup,
 }) => {
@@ -31,6 +33,22 @@ export const GroupManagerModal: React.FC<GroupManagerModalProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const handleMoveUp = (index: number) => {
+    if (index <= 0 || !onReorderGroups) return;
+    const next = [...groups];
+    const [moved] = next.splice(index, 1);
+    next.splice(index - 1, 0, moved);
+    onReorderGroups(next);
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (index >= groups.length - 1 || !onReorderGroups) return;
+    const next = [...groups];
+    const [moved] = next.splice(index, 1);
+    next.splice(index + 1, 0, moved);
+    onReorderGroups(next);
+  };
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,17 +140,18 @@ export const GroupManagerModal: React.FC<GroupManagerModalProps> = ({
 
           {/* Existing Groups List */}
           <div>
-            <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider block mb-2">
-              现有分组列表 ({groups.length})
-            </span>
+            <div className="flex items-center justify-between text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">
+              <span>现有分组列表 ({groups.length})</span>
+              <span className="text-[11px] font-normal lowercase text-neutral-400">可调整顺序</span>
+            </div>
 
             {groups.length === 0 ? (
               <div className="text-center py-6 text-xs text-neutral-400 dark:text-neutral-500 border border-dashed border-neutral-200 dark:border-neutral-800 rounded-xl">
                 暂无自定义分组，您可以在上方直接创建。
               </div>
             ) : (
-              <div className="divide-y divide-neutral-100 dark:divide-neutral-800/80 max-h-60 overflow-y-auto">
-                {groups.map((group) => {
+              <div className="divide-y divide-neutral-100 dark:divide-neutral-800/80 max-h-60 overflow-y-auto pr-0.5">
+                {groups.map((group, index) => {
                   const count = groupCounts[group.id] || 0;
                   const isEditing = editingId === group.id;
                   const isConfirmingDelete = confirmDeleteId === group.id;
@@ -140,7 +159,7 @@ export const GroupManagerModal: React.FC<GroupManagerModalProps> = ({
                   return (
                     <div
                       key={group.id}
-                      className="py-2.5 flex items-center justify-between gap-3 text-sm"
+                      className="py-2.5 flex items-center justify-between gap-2.5 text-sm"
                     >
                       {isEditing ? (
                         <div className="flex-1 flex items-center gap-2">
@@ -149,17 +168,20 @@ export const GroupManagerModal: React.FC<GroupManagerModalProps> = ({
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
                             className="flex-1 px-2.5 py-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#1e1e1e] text-neutral-900 dark:text-neutral-100 focus:outline-none"
+                            autoFocus
                           />
                           <button
+                            type="button"
                             onClick={() => handleSaveEdit(group.id)}
-                            className="p-1 text-emerald-600 hover:text-emerald-700"
+                            className="p-1 text-emerald-600 hover:text-emerald-700 cursor-pointer"
                             title="保存"
                           >
                             <Check className="w-4 h-4" />
                           </button>
                           <button
+                            type="button"
                             onClick={() => setEditingId(null)}
-                            className="p-1 text-neutral-400 hover:text-neutral-600"
+                            className="p-1 text-neutral-400 hover:text-neutral-600 cursor-pointer"
                             title="取消"
                           >
                             <X className="w-4 h-4" />
@@ -172,14 +194,16 @@ export const GroupManagerModal: React.FC<GroupManagerModalProps> = ({
                           </span>
                           <div className="flex items-center gap-1.5">
                             <button
+                              type="button"
                               onClick={() => handleExecuteDelete(group.id, group.name)}
-                              className="px-2 py-0.5 rounded bg-rose-600 text-white font-medium hover:bg-rose-700"
+                              className="px-2 py-0.5 rounded bg-rose-600 text-white font-medium hover:bg-rose-700 cursor-pointer"
                             >
                               确定删除
                             </button>
                             <button
+                              type="button"
                               onClick={() => setConfirmDeleteId(null)}
-                              className="px-2 py-0.5 rounded bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
+                              className="px-2 py-0.5 rounded bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 cursor-pointer"
                             >
                               取消
                             </button>
@@ -187,6 +211,30 @@ export const GroupManagerModal: React.FC<GroupManagerModalProps> = ({
                         </div>
                       ) : (
                         <>
+                          {/* Reorder Buttons */}
+                          {onReorderGroups && (
+                            <div className="flex items-center gap-0.5 shrink-0 bg-neutral-100 dark:bg-neutral-800/80 rounded-lg p-0.5 border border-neutral-200/60 dark:border-neutral-700/60">
+                              <button
+                                type="button"
+                                disabled={index === 0}
+                                onClick={() => handleMoveUp(index)}
+                                className="p-1 rounded-md text-neutral-500 hover:text-neutral-900 dark:hover:text-white disabled:opacity-25 disabled:hover:text-neutral-400 hover:bg-white dark:hover:bg-neutral-700 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                                title="上移分组"
+                              >
+                                <ArrowUp className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={index === groups.length - 1}
+                                onClick={() => handleMoveDown(index)}
+                                className="p-1 rounded-md text-neutral-500 hover:text-neutral-900 dark:hover:text-white disabled:opacity-25 disabled:hover:text-neutral-400 hover:bg-white dark:hover:bg-neutral-700 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                                title="下移分组"
+                              >
+                                <ArrowDown className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
+
                           <div className="min-w-0 flex-1">
                             <div className="font-medium text-neutral-900 dark:text-neutral-100 truncate">
                               {group.name}
@@ -209,6 +257,7 @@ export const GroupManagerModal: React.FC<GroupManagerModalProps> = ({
                               </button>
                             )}
                             <button
+                              type="button"
                               onClick={() => handleStartEdit(group)}
                               className="p-1.5 text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
                               title="重命名"
@@ -216,6 +265,7 @@ export const GroupManagerModal: React.FC<GroupManagerModalProps> = ({
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
                             <button
+                              type="button"
                               onClick={() => setConfirmDeleteId(group.id)}
                               className="p-1.5 text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400 rounded hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
                               title="删除分组"

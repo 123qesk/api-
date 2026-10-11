@@ -62,6 +62,7 @@ export interface PromptItem {
   id: string;
   name: string; // 名称
   author?: string; // 作者
+  source?: string; // 来源
   category: string; // 分类
   images: string[]; // 提示词预览（可多选图）
   positivePrompt: string; // 正面提示词
